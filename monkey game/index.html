@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9-Box Memory Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>9-Box Memory Game</h1>
+    <div class="container">
+        <div class="box" id="box-1" onclick="checkNumber(1)"></div>
+        <div class="box" id="box-2" onclick="checkNumber(2)"></div>
+        <div class="box" id="box-3" onclick="checkNumber(3)"></div>
+        <div class="box" id="box-4" onclick="checkNumber(4)"></div>
+        <div class="box" id="box-5" onclick="checkNumber(5)"></div>
+        <div class="box" id="box-6" onclick="checkNumber(6)"></div>
+        <div class="box" id="box-7" onclick="checkNumber(7)"></div>
+        <div class="box" id="box-8" onclick="checkNumber(8)"></div>
+        <div class="box" id="box-9" onclick="checkNumber(9)"></div>
+    </div>
+    <div class="controls">
+        <button id="easy-btn" onclick="startGame('easy')">Easy</button>
+        <button id="hard-btn" onclick="startGame('hard')">Hard</button>
+        <button id="extreme-btn" onclick="startGame('extreme')">Extreme</button>
+    </div>
+    <p id="message"></p>
+    <p id="countdown"></p>
+<script>
+    let correctSequence = [];
+let userSequence = [];
+let gameActive = false;
+let countdownInterval;
+let canClickBoxes = false;
+
+function startGame(level) {
+    if (gameActive) return; // Prevent starting another game while one is active
+
+    gameActive = true;
+    userSequence = [];
+    correctSequence = Array.from({ length: 9 }, (_, i) => i + 1);
+    shuffleArray(correctSequence);
+    displayNumbers();
+
+    // Disable buttons while the game is active
+    document.getElementById('easy-btn').disabled = true;
+    document.getElementById('hard-btn').disabled = true;
+    document.getElementById('extreme-btn').disabled = true;
+
+    const countdownTime = getCountdownTime(level);
+    startCountdown(countdownTime);
+
+    setTimeout(hideNumbers, getLevelTime(level));
+}
+
+function getLevelTime(level) {
+    switch (level) {
+        case 'easy':
+            return 30000; // 30 seconds
+        case 'hard':
+            return 20000;  // 20 seconds
+        case 'extreme':
+            return 10000;  // 10 seconds
+        default:
+            return 30000;
+    }
+}
+
+function getCountdownTime(level) {
+    switch (level) {
+        case 'easy':
+            return 30; // 30 seconds
+        case 'hard':
+            return 20; // 20 seconds
+        case 'extreme':
+            return 10; // 10 seconds
+        default:
+            return 30;
+    }
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function displayNumbers() {
+    correctSequence.forEach((number, index) => {
+        const box = document.getElementById(`box-${index + 1}`);
+        box.textContent = number;
+        box.style.backgroundColor = '#3498db';
+    });
+    document.getElementById('message').textContent = `Memorize the order!`;
+}
+
+function hideNumbers() {
+    document.querySelectorAll('.box').forEach(box => {
+        box.textContent = '';
+        box.style.backgroundColor = '#34495e';
+    });
+    document.getElementById('message').textContent = `Click the boxes in order from 1 to 9!`;
+    canClickBoxes = true; // Enable clicking after countdown ends
+}
+
+function checkNumber(boxNumber) {
+    if (!gameActive || !canClickBoxes) return; // Prevent clicking during countdown
+
+    const expectedNumber = userSequence.length + 1;
+
+    if (correctSequence[boxNumber - 1] === expectedNumber) {
+        // Correct box clicked
+        const box = document.getElementById(`box-${boxNumber}`);
+        box.textContent = expectedNumber;
+        box.style.backgroundColor = '#2ecc71'; // Green for correct
+        userSequence.push(boxNumber);
+
+        if (userSequence.length === 9) {
+            endGame();
+        }
+    } else {
+        // Incorrect box clicked
+        endGame();
+    }
+}
+
+function startCountdown(seconds) {
+    const countdownElem = document.getElementById('countdown');
+    countdownElem.textContent = `Time remaining: ${seconds} seconds`;
+
+    countdownInterval = setInterval(() => {
+        seconds--;
+        countdownElem.textContent = `Time remaining: ${seconds} seconds`;
+
+        if (seconds <= 0) {
+            clearInterval(countdownInterval);
+            countdownElem.textContent = '';
+            canClickBoxes = true; // Enable clicking after countdown ends
+        }
+    }, 1000);
+}
+
+function endGame() {
+    gameActive = false;
+    canClickBoxes = false; // Disable clicking after the game ends
+
+    clearInterval(countdownInterval);
+    document.getElementById('countdown').textContent = '';
+
+    // Reveal all correct numbers
+    correctSequence.forEach((number, index) => {
+        const box = document.getElementById(`box-${index + 1}`);
+        box.textContent = number;
+
+        if (userSequence.includes(index + 1)) {
+            box.style.backgroundColor = '#2ecc71'; // Green for correct
+        } else {
+            box.style.backgroundColor = '#e74c3c'; // Red for missed or incorrect
+        }
+    });
+
+    if (userSequence.length === 9 && userSequence.every((num, i) => correctSequence[num - 1] === i + 1)) {
+        document.getElementById('message').textContent = `You won! Great memory!`;
+    } else {
+        document.getElementById('message').textContent = `Game Over! Here's the correct pattern.`;
+    }
+
+    // Enable buttons after the game is over
+    document.getElementById('easy-btn').disabled = false;
+    document.getElementById('hard-btn').disabled = false;
+    document.getElementById('extreme-btn').disabled = false;
+}
+
+</script>
+    <script src="script.js"></script>
+</body>
+</html>
